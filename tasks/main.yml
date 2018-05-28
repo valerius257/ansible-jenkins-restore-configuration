@@ -1,0 +1,15 @@
+---
+- name: restore jenkins configuration from scm
+  local_action:
+    module: jenkins_script
+    url: "{{ JENKINS_URL }}"
+    user: "{{ JENKINS_ADMIN_USERNAME }}"
+    password: "{{ JENKINS_ADMIN_PASSWORD }}"
+    timeout: 9000
+    script: "{{ lookup('template', 'configure_scmsync.groovy.j2') }}"
+  register: scmsync_script
+  changed_when: scmsync_script.output != ''
+  notify: wait for jenkins to restart
+
+- name: run all notified handlers
+  meta: flush_handlers

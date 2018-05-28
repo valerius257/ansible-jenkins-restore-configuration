@@ -1,0 +1,17 @@
+---
+jenkins_scmsync_display_status: 'true'
+jenkins_scmsync_no_user_commit: 'true'
+jenkins_scmsync_default_includes:
+  - secrets/master.key
+  - secrets/hudson.util.Secret
+  - secrets/org.jenkinsci.main.modules.instance_identity.InstanceIdentity.KEY
+  - credentials.xml
+  - scriptApproval.xml
+
+JENKINS_URL: "http://{{ hostvars[ groups[(JENKINS_GROUP | default('jenkins')) ][0]].inventory_hostname }}:8080"
+JENKINS_ADMIN_USERNAME: admin
+JENKINS_ADMIN_PASSWORD: securePassword
+
+JENKINS_SCMSYNC_URL: https://user:pass@git.example.com/jenkins-conf.git
+JENKINS_SCMSYNC_MESSAGE_PATTERN: '[message]'
+JENKINS_SCMSYNC_ADDITIONAL_INCLUDES: []

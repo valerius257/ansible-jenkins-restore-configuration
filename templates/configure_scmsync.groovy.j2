@@ -1,0 +1,30 @@
+import hudson.plugins.scm_sync_configuration.scms.*
+
+def instance = Jenkins.getInstanceOrNull()
+def scmSyncPlugin = instance.getPlugin(hudson.plugins.scm_sync_configuration.ScmSyncConfigurationPlugin.class)
+
+if (scmSyncPlugin.getScmRepositoryUrl() != '{{ JENKINS_SCMSYNC_URL }}') {
+  instance.doQuietDown()
+  def syncConfiguration = new hudson.plugins.scm_sync_configuration.xstream.migration.DefaultSSCPOJO()
+
+  syncConfiguration.setScm(SCM.valueOf(ScmSyncGitSCM.class))
+  syncConfiguration.setDisplayStatus({{ jenkins_scmsync_display_status }})
+  syncConfiguration.setNoUserCommitMessage({{ jenkins_scmsync_no_user_commit }})
+  syncConfiguration.setCommitMessagePattern('{{ JENKINS_SCMSYNC_MESSAGE_PATTERN }}')
+  syncConfiguration.setScmRepositoryUrl('scm:git:{{ JENKINS_SCMSYNC_URL }}')
+  syncConfiguration.setManualSynchronizationIncludes(['{{ jenkins_scmsync_default_includes | union(JENKINS_SCMSYNC_ADDITIONAL_INCLUDES) | join("', '") }}'])
+
+  scmSyncPlugin.loadData(syncConfiguration)
+  scmSyncPlugin.business.initializeRepository(scmSyncPlugin.createScmContext(), true)
+  scmSyncPlugin.reloadAllFilesFromScm()
+  scmSyncPlugin.save()
+
+  while (!RestartListener.isAllReady()) {
+    sleep(10 * 1000)
+  }
+
+  println 'restarting to apply restored configuration'
+  Thread.start {
+    instance.restart()
+  }
+}
